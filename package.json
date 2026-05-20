@@ -1,0 +1,15 @@
+{
+  "name": "monginis-cake-website",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "setup": "npm install --prefix backend && npm install",
+    "dev": "concurrently -n BACKEND,FRONTEND -c cyan,magenta \"node backend/server.js\" \"http-server frontend -p 5173 -c-1 --cors\"",
+    "backend": "node backend/server.js",
+    "frontend": "http-server frontend -p 5173 -c-1 --cors"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "http-server": "^14.1.1"
+  }
+}

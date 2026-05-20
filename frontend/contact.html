@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Contact Monginis — address, phone, email, maps, and hours." />
+  <title>Contact — Monginis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="contact">
+  <div class="bg-blobs" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+
+  <header class="topbar">
+    <nav class="nav" aria-label="Primary">
+      <a class="brand" href="index.html" aria-label="Monginis Home">
+        <img class="brand-logo" src="assets/logo.png" alt="Monginis logo" loading="eager" onerror="this.onerror=null;this.src='assets/logo-placeholder.svg'" />
+        <span class="brand-text">
+          <span class="brand-name">Monginis</span>
+          <span class="brand-tag">Contact</span>
+        </span>
+      </a>
+      <button class="icon-btn burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+      <div class="nav-links" role="navigation" aria-label="Desktop">
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link" href="catalog.html">Catalog</a>
+        <a class="nav-link" href="about.html">About</a>
+        <a class="nav-link active" href="contact.html">Contact</a>
+        <a class="nav-link admin" href="pages/admin-login.html" aria-label="Admin"><i class="fa-solid fa-user-shield"></i></a>
+      </div>
+    </nav>
+    <div id="mobileMenu" class="mobile-menu" hidden>
+      <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
+      <a href="catalog.html"><i class="fa-solid fa-cake-candles"></i> Catalog</a>
+      <a href="about.html"><i class="fa-solid fa-circle-info"></i> About</a>
+      <a href="contact.html"><i class="fa-solid fa-phone"></i> Contact</a>
+      <a href="pages/admin-login.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="page-hero">
+      <h1 class="h1">Contact Monginis</h1>
+      <p class="sub">Shop info, hours, and directions—optimized for tap-to-call and tap-to-chat.</p>
+      <svg class="wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,55 C160,95 320,110 480,86 C640,62 800,12 960,22 C1120,32 1280,86 1440,64 L1440,120 L0,120 Z" fill="var(--cream)" opacity="0.9"></path>
+      </svg>
+    </section>
+
+    <section class="section">
+      <div class="grid two" id="contactGrid">
+        <div class="panel">
+          <h2 class="h2">Shop Details</h2>
+          <div class="info-list">
+            <a class="info-item" id="contactPhone" href="tel:9613661155" data-contact-link="phone"><i class="fa-solid fa-phone"></i><span data-field="phone">9613661155</span></a>
+            <a class="info-item" id="contactEmail" href="mailto:kaizenservice1@gmail.com" data-contact-link="email"><i class="fa-solid fa-envelope"></i><span data-field="email">kaizenservice1@gmail.com</span></a>
+            <div class="info-item"><i class="fa-solid fa-location-dot"></i><span data-field="address">Loading…</span></div>
+            <div class="info-item"><i class="fa-solid fa-clock"></i><span data-field="openingHours">Loading…</span></div>
+          </div>
+          <a class="btn primary mt-14" id="contactMaps" href="https://maps.app.goo.gl/WbYHNrevSWsr88Fx5?g_st=ac" data-contact-link="maps" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-map-location-dot"></i> Open in Maps</a>
+          <div class="social-row" aria-label="Social links">
+            <a class="social-link" href="#" data-social="ig" aria-label="Instagram">
+              <span class="social-avatar"><img src="assets/logo.png" alt="Monginis logo" loading="lazy" /></span>
+              <span class="social-label"><i class="fa-brands fa-instagram"></i> Instagram</span>
+            </a>
+            <a class="social-link" href="#" data-social="fb" aria-label="Facebook">
+              <span class="social-avatar"><img src="assets/logo.png" alt="Monginis logo" loading="lazy" /></span>
+              <span class="social-label"><i class="fa-brands fa-facebook"></i> Facebook</span>
+            </a>
+            <a class="social-link" href="#" data-social="wa" aria-label="WhatsApp">
+              <span class="social-avatar"><img src="assets/logo.png" alt="Monginis logo" loading="lazy" /></span>
+              <span class="social-label"><i class="fa-brands fa-whatsapp"></i> WhatsApp</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2 class="h2">Map</h2>
+          <div class="map-wrap" id="mapWrap">
+            <div class="skeleton map-skel"></div>
+          </div>
+          <p class="muted tiny">If the map doesn’t load on your device, open it in Google Maps.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <img class="footer-logo" src="assets/logo.png" alt="Monginis logo" loading="lazy" onerror="this.onerror=null;this.src='assets/logo-placeholder.svg'" />
+          <div>
+            <div class="footer-name">Monginis</div>
+            <div class="footer-tag">You Dream it, We Bake it</div>
+          </div>
+        </div>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <a href="catalog.html">Catalog</a>
+          <a href="about.html">About</a>
+          <a href="contact.html">Contact</a>
+          <a href="pages/admin-login.html">Admin</a>
+        </div>
+        <div class="footer-meta">
+          <div class="muted" id="footerAddress">Loading shop info…</div>
+          <div class="muted">© Sarang Chavan</div>
+        </div>
+        <div class="footer-social" aria-label="Social links">
+          <a class="social-link small" href="#" data-social="ig" aria-label="Instagram">
+            <span class="social-avatar"><img src="assets/logo.png" alt="Monginis logo" loading="lazy" /></span>
+            <span class="social-label"><i class="fa-brands fa-instagram"></i> Instagram</span>
+          </a>
+          <a class="social-link small" href="#" data-social="fb" aria-label="Facebook">
+            <span class="social-avatar"><img src="assets/logo.png" alt="Monginis logo" loading="lazy" /></span>
+            <span class="social-label"><i class="fa-brands fa-facebook"></i> Facebook</span>
+          </a>
+          <a class="social-link small" href="#" data-social="wa" aria-label="WhatsApp">
+            <span class="social-avatar"><img src="assets/logo.png" alt="Monginis logo" loading="lazy" /></span>
+            <span class="social-label"><i class="fa-brands fa-whatsapp"></i> WhatsApp</span>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Bottom navigation">
+    <a class="bn" href="index.html" data-nav="home"><i class="fa-solid fa-house"></i><span>Home</span></a>
+    <a class="bn" href="catalog.html" data-nav="catalog"><i class="fa-solid fa-cake-candles"></i><span>Catalog</span></a>
+    <a class="bn" href="about.html" data-nav="about"><i class="fa-solid fa-circle-info"></i><span>About</span></a>
+    <a class="bn" href="contact.html" data-nav="contact"><i class="fa-solid fa-phone"></i><span>Contact</span></a>
+    <a class="bn" href="pages/admin-login.html" data-nav="admin"><i class="fa-solid fa-user-shield"></i><span>Admin</span></a>
+  </nav>
+
+  <a class="whatsapp-float" href="#" id="waFloat" aria-label="WhatsApp inquiry">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <script src="script.js"></script>
+</body>
+</html>

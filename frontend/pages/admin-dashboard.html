@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Monginis admin dashboard" />
+  <title>Admin Dashboard — Monginis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body data-page="admin-dashboard">
+  <div class="bg-blobs" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+
+  <header class="topbar">
+    <nav class="nav" aria-label="Admin">
+      <a class="brand" href="../index.html" aria-label="Monginis Home">
+        <img class="brand-logo" src="../assets/logo.png" alt="Monginis logo" loading="eager" onerror="this.onerror=null;this.src='../assets/logo-placeholder.svg'" />
+        <span class="brand-text">
+          <span class="brand-name">Monginis</span>
+          <span class="brand-tag">Admin Dashboard</span>
+        </span>
+      </a>
+      <div class="nav-links admin-links">
+        <button class="btn ghost" id="logoutBtn" type="button"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="main">
+    <section class="section">
+      <div class="panel">
+        <div class="admin-bar">
+          <div>
+            <h1 class="h1 mb-6">Owner Controls</h1>
+            <p class="sub">Manage categories, cakes, images, shop info, and view likes/dislikes analytics.</p>
+          </div>
+          <a class="btn ghost" href="../catalog.html"><i class="fa-solid fa-eye"></i> View catalog</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-label="Analytics">
+      <div class="panel">
+        <div class="section-head">
+          <h2 class="h2"><i class="fa-solid fa-chart-line icon-pink"></i> Analytics</h2>
+          <div class="muted">Likes & dislikes (all cakes)</div>
+        </div>
+        <div class="grid two">
+          <div class="row"><div class="row-head"><div class="row-title">Total Likes</div><small id="anaLikes">0</small></div></div>
+          <div class="row"><div class="row-head"><div class="row-title">Total Dislikes</div><small id="anaDislikes">0</small></div></div>
+        </div>
+        <div class="table mt-14" id="anaTop"></div>
+      </div>
+    </section>
+
+    <section class="section" aria-label="Categories">
+      <div class="panel">
+        <div class="section-head">
+          <h2 class="h2"><i class="fa-solid fa-tags icon-pink"></i> Categories</h2>
+          <div class="muted">Dynamic categories appear on the catalog filter.</div>
+        </div>
+
+        <form class="form" id="catCreateForm">
+          <div class="grid two">
+            <div class="field">
+              <label for="newCatName">New category name</label>
+              <input class="input" id="newCatName" placeholder="Birthday Cakes" required />
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn primary" type="submit"><i class="fa-solid fa-plus"></i> Create</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="table" id="catList"></div>
+      </div>
+    </section>
+
+    <section class="section" aria-label="Create cake">
+      <div class="panel">
+        <div class="section-head">
+          <h2 class="h2"><i class="fa-solid fa-cake-candles icon-pink"></i> Create Cake</h2>
+          <div class="muted">Upload multiple images, then create the cake.</div>
+        </div>
+
+        <form class="form" id="cakeCreateForm">
+          <div class="grid two">
+            <div class="field">
+              <label for="createCakeName">Cake name</label>
+              <input class="input" id="createCakeName" placeholder="Chocolate Truffle" required />
+            </div>
+            <div class="field">
+              <label for="createCakeCategory">Category</label>
+              <select class="input categorySelect" id="createCakeCategory" required>
+                <option value="">Select category</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="createCakeDesc">Description (optional)</label>
+            <textarea class="input" id="createCakeDesc" rows="3" placeholder="Short premium description…"></textarea>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label for="createCakeFiles">Upload images (multiple)</label>
+              <input class="input" id="createCakeFiles" type="file" accept="image/*" multiple />
+              <div class="muted tiny" id="createUploadedLabel">No uploads yet</div>
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button class="btn primary" id="createUploadBtn" type="button"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button>
+            </div>
+          </div>
+
+          <button class="btn primary" type="submit"><i class="fa-solid fa-check"></i> Create cake</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="section" aria-label="Manage cakes">
+      <div class="panel">
+        <div class="section-head">
+          <h2 class="h2"><i class="fa-solid fa-gear icon-pink"></i> Manage Cakes</h2>
+          <div class="muted">Edit details, add/delete images, delete cakes.</div>
+        </div>
+        <div class="table" id="cakeList"></div>
+      </div>
+    </section>
+
+    <section class="section" aria-label="Shop info">
+      <div class="panel">
+        <div class="section-head">
+          <h2 class="h2"><i class="fa-solid fa-store icon-pink"></i> Shop Info & Social Links</h2>
+          <div class="muted">Used across Contact and WhatsApp buttons.</div>
+        </div>
+
+        <form class="form" id="shopForm">
+          <div class="field"><label for="shopAddress">Address</label><input class="input" id="shopAddress" placeholder="Shop address" /></div>
+          <div class="grid two">
+            <div class="field"><label for="shopPhone">Phone</label><input class="input" id="shopPhone" placeholder="+91…" /></div>
+            <div class="field"><label for="shopEmail">Email</label><input class="input" id="shopEmail" placeholder="hello@monginis.com" /></div>
+          </div>
+          <div class="field"><label for="shopHours">Opening hours</label><input class="input" id="shopHours" placeholder="Daily 10:00 AM – 9:00 PM" /></div>
+
+          <div class="grid two">
+            <div class="field"><label for="shopWhatsapp">WhatsApp number (with country code)</label><input class="input" id="shopWhatsapp" placeholder="9199…" /></div>
+            <div class="field"><label for="shopInstagram">Instagram URL</label><input class="input" id="shopInstagram" placeholder="https://instagram.com/..." /></div>
+          </div>
+
+          <div class="grid two">
+            <div class="field"><label for="shopFacebook">Facebook URL</label><input class="input" id="shopFacebook" placeholder="https://facebook.com/..." /></div>
+            <div class="field"><label for="shopMaps">Google Maps URL</label><input class="input" id="shopMaps" placeholder="https://maps.app.goo.gl/..." /></div>
+          </div>
+
+          <button class="btn primary" type="submit"><i class="fa-solid fa-check"></i> Save shop info</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="footer-inner">
+        <div class="muted">© Sarang Chavan</div>
+      </div>
+    </section>
+
+    <div class="panel admin-toast" id="adminToast" hidden>Saved</div>
+  </main>
+
+  <script src="../script.js"></script>
+</body>
+</html>

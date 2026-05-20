@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Monginis admin login" />
+  <title>Admin Login — Monginis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body data-page="admin-login">
+  <div class="bg-blobs" aria-hidden="true">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+
+  <main class="auth-wrap">
+    <div class="panel auth-card">
+      <div class="footer-brand center">
+        <img class="footer-logo" src="../assets/logo.png" alt="Monginis logo" loading="eager" onerror="this.onerror=null;this.src='../assets/logo-placeholder.svg'" />
+        <div>
+          <div class="footer-name">Admin Login</div>
+          <div class="footer-tag">You Dream it, We Bake it</div>
+        </div>
+      </div>
+
+      <form class="form" id="adminLoginForm" autocomplete="on">
+        <div class="field">
+          <label for="adminEmail">Email</label>
+          <input class="input" id="adminEmail" type="email" autocomplete="username" placeholder="owner@monginis.com" required />
+        </div>
+        <div class="field">
+          <label for="adminPassword">Password</label>
+          <input class="input" id="adminPassword" type="password" autocomplete="current-password" placeholder="••••••••" required />
+        </div>
+        <button class="btn primary" id="adminLoginBtn" type="submit"><i class="fa-solid fa-lock"></i> Sign In</button>
+        <div class="muted" id="adminMsg">Owner access only. Use the email set as <b>ADMIN_EMAIL</b> in <b>backend/.env</b>.</div>
+        <a class="btn ghost" href="../index.html"><i class="fa-solid fa-arrow-left"></i> Back to website</a>
+      </form>
+
+      <div class="footer-meta mt-14">
+        <div class="muted">© Sarang Chavan</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../script.js"></script>
+</body>
+</html>
