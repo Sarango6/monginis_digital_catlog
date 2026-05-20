@@ -1,19 +1,6 @@
 /* Monginis Catalog — vanilla JS */
 (() => {
-  const API_BASE = (() => {
-    const isLocalHost =
-      location.hostname === 'localhost' ||
-      location.hostname === '127.0.0.1' ||
-      /^10\./.test(location.hostname) ||
-      /^192\.168\./.test(location.hostname) ||
-      /^172\.(1[6-9]|2\d|3[0-1])\./.test(location.hostname);
-
-    if (isLocalHost) {
-      return `${location.protocol}//${location.hostname}:5000`;
-    }
-    // For production, set this to your Render URL:
-    return 'https://YOUR-RENDER-URL.onrender.com';
-  })();
+  const API_BASE_URL = 'https://monginis-digicatlog.onrender.com';
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -36,7 +23,7 @@
   };
 
   const jsonFetch = async (path, opts = {}) => {
-    const url = `${API_BASE}${path}`;
+    const url = `${API_BASE_URL}${path}`;
     const res = await fetch(url, {
       ...opts,
       headers: {
@@ -887,7 +874,7 @@
     const uploadImages = async (files) => {
       const fd = new FormData();
       Array.from(files).forEach(f => fd.append('images', f));
-      const res = await fetch(`${API_BASE}/api/upload`, {
+        const res = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: fd,

@@ -29,12 +29,10 @@ const ensureInitialAdmin = async () => {
     if (!forceReset) return;
     existing.passwordHash = passwordHash;
     await existing.save();
-    console.log('Admin password reset from env for:', adminEmail);
     return;
   }
 
   await Admin.create({ email: adminEmail, passwordHash });
-  console.log('Initial admin created:', adminEmail);
 };
 
 const login = async (req, res) => {
