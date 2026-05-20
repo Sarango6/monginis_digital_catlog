@@ -42,7 +42,7 @@ app.get('/api/health', (req, res) => {
 // All remaining /api endpoints require MongoDB.
 // When Atlas IP whitelist blocks access (or URI is missing), return a clear 503 instead of hanging.
 app.use('/api', (req, res, next) => {
-  if (req.path === '/admin/login') {
+  if (req.originalUrl === '/api/admin/login' || req.originalUrl.startsWith('/api/admin/login?')) {
     return next();
   }
 

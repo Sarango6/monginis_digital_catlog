@@ -24,12 +24,18 @@
 
   const jsonFetch = async (path, opts = {}) => {
     const url = `${API_BASE_URL}${path}`;
-    const res = await fetch(url, {
-      ...opts,
-      headers: {
-        ...(opts.headers || {}),
-      },
-    });
+    let res;
+    try {
+      res = await fetch(url, {
+        ...opts,
+        credentials: 'include',
+        headers: {
+          ...(opts.headers || {}),
+        },
+      });
+    } catch (err) {
+      throw new Error(`Network error while calling ${path}. Check backend deployment and CORS.`);
+    }
 
     const contentType = res.headers.get('content-type') || '';
     const data = contentType.includes('application/json') ? await res.json() : await res.text();
