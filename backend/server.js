@@ -1,5 +1,6 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+console.log('MONGO URI:', process.env.MONGO_URI);
 
 const express = require('express');
 const cors = require('cors');
@@ -19,9 +20,9 @@ const app = express();
 mongoose.set('bufferCommands', false);
 
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 
-const hasRealMongoUri = Boolean(MONGODB_URI) && !String(MONGODB_URI).includes('<');
+const hasRealMongoUri = Boolean(MONGO_URI) && !String(MONGO_URI).includes('<');
 
 if (!hasRealMongoUri) {
   console.warn('MongoDB not configured (set a real MONGODB_URI in backend/.env). Starting without database.');
@@ -74,10 +75,10 @@ app.use((err, req, res, next) => {
 
     if (hasRealMongoUri) {
       try {
-        await mongoose.connect(MONGODB_URI, {
+        await mongoose.connect(MONGO_URI, {
           serverSelectionTimeoutMS: 8000,
         });
-        console.log('MongoDB connected');
+        console.log('MongoDB connected successfully');
         await ensureInitialAdmin();
       } catch (e) {
         console.error('MongoDB connection failed (server still running):', e.message || e);
