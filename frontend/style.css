@@ -246,6 +246,26 @@ img{max-width:100%;display:block;}
 .chip-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
 .chip-tile{min-height:64px;border-radius:22px;border:1px solid var(--border);background:linear-gradient(135deg, rgba(227,0,116,.12), rgba(38,50,120,.08));box-shadow:var(--shadow-soft);padding:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:900;}
 
+/* Filters + pagination */
+.filter-bar{display:grid;gap:12px;margin-bottom:12px;}
+.filter-bar.compact{grid-template-columns:1fr auto;align-items:end;}
+.pagination{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:16px;flex-wrap:wrap;}
+.pagination-info{font-weight:800;color:var(--muted);}
+
+/* Bulk upload */
+.bulk-progress{margin-top:12px;border-radius:22px;border:1px dashed rgba(227,0,116,.28);background:rgba(255,255,255,.82);box-shadow:var(--shadow-soft);padding:14px;display:grid;gap:10px;}
+.bulk-progress-head{display:flex;gap:10px;align-items:center;}
+.bulk-spinner{width:28px;height:28px;border-radius:50%;border:3px solid rgba(227,0,116,.15);border-top-color:var(--pink);animation:spin 1s linear infinite;}
+.bulk-status{font-weight:900;}
+.bulk-counts{color:var(--muted);font-weight:800;font-size:12px;}
+.bulk-bar{height:10px;border-radius:999px;background:rgba(38,50,120,.08);overflow:hidden;border:1px solid rgba(38,50,120,.08);}
+.bulk-bar span{display:block;height:100%;width:0;background:linear-gradient(90deg, rgba(227,0,116,.95), rgba(38,50,120,.95));transition:width .2s ease;}
+.bulk-metrics{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:900;color:var(--muted);}
+.bulk-results{margin-top:16px;}
+.bulk-card .card-body{gap:8px;}
+
+@keyframes spin{to{transform:rotate(360deg);}}
+
 /* Details */
 .details{display:grid;gap:16px;}
 .detail-media-wrap{display:grid;gap:10px;}
@@ -456,6 +476,8 @@ img{max-width:100%;display:block;}
   .grid.two{grid-template-columns:repeat(2,1fr);} 
   .contact-cards{grid-template-columns:repeat(3,1fr);} 
   .chip-grid{grid-template-columns:repeat(3,1fr);} 
+  .filter-bar{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .filter-bar.compact{grid-template-columns:1fr auto;}
   .details{grid-template-columns:1.05fr .95fr;align-items:start;}
   .details .buttons{grid-template-columns:repeat(2,1fr);} 
   .footer-contact{grid-template-columns:repeat(3,minmax(0,1fr));}

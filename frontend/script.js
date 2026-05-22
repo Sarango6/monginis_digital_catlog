@@ -8,6 +8,7 @@
   const state = {
     shopInfo: null,
     categories: [],
+    adminCakes: [],
   };
 
   const DEFAULT_SHOP_INFO = {
@@ -164,6 +165,65 @@
     // Legacy schema: imageUrl
     return safeUrl(cake.imageUrl) || safeUrl(cake.thumbnailUrl) || safeUrl(cake.image);
   };
+
+  const normalizePaged = (data) => {
+    if (Array.isArray(data)) {
+      return { items: data, page: 1, limit: data.length, total: data.length, totalPages: 1 };
+    }
+    return data || { items: [], page: 1, limit: 0, total: 0, totalPages: 1 };
+  };
+
+  const matchCategorySlug = (value) => {
+    const raw = String(value || '').trim();
+    if (!raw) return 'all';
+    if (raw.toLowerCase() === 'all') return 'all';
+    const direct = state.categories.find((c) => c.slug === raw);
+    if (direct) return direct.slug;
+    const byName = state.categories.find((c) => c.name.toLowerCase() === raw.toLowerCase());
+    return byName ? byName.slug : raw;
+  };
+
+  const compressImageFile = (file, opts = {}) => new Promise((resolve) => {
+    const maxSize = Number(opts.maxSize || 1600);
+    const quality = Number(opts.quality || 0.8);
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const width = Math.round(img.width * scale);
+      const height = Math.round(img.height * scale);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        return resolve(file);
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const finish = (blob, mime, ext) => {
+        URL.revokeObjectURL(url);
+        if (!blob) return resolve(file);
+        const name = file.name.replace(/\.[^/.]+$/, `.${ext}`);
+        resolve(new File([blob], name, { type: mime }));
+      };
+
+      canvas.toBlob((blob) => {
+        if (blob) return finish(blob, 'image/webp', 'webp');
+        canvas.toBlob((fallback) => finish(fallback, 'image/jpeg', 'jpg'), 'image/jpeg', quality);
+      }, 'image/webp', quality);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file);
+    };
+
+    img.src = url;
+  });
 
   const getShopLink = (info, type) => {
     if (!info) return '#';
@@ -362,12 +422,37 @@
   const initHome = async () => {
     await applyShopInfoToCommonUI();
 
+    const homeInput = $('#homeCategoryInput');
+    const homeList = $('#homeCategoryList');
+    const homeClear = $('#homeClearFilter');
+    const homeCats = await loadCategories();
+
+    if (homeList) {
+      homeList.innerHTML = '';
+      const optAll = document.createElement('option');
+      optAll.value = 'All';
+      homeList.appendChild(optAll);
+      homeCats.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.name;
+        homeList.appendChild(opt);
+      });
+    }
+
+    const loadFeatured = async (categorySlug) => {
+      const query = categorySlug && categorySlug !== 'all'
+        ? `?category=${encodeURIComponent(categorySlug)}&limit=12`
+        : '?limit=12';
+      const cakes = await jsonFetch(`/api/cakes${query}`);
+      return Array.isArray(cakes) ? cakes : [];
+    };
+
     // Featured
     const slider = $('#featuredSlider');
     const skel = $('#featuredSkeleton');
     if (slider) {
       try {
-        const cakes = await jsonFetch('/api/cakes?limit=12');
+        const cakes = await loadFeatured('all');
         slider.innerHTML = '';
         (cakes || []).slice(0, 10).forEach(c => {
           const el = cakeCard(c);
@@ -381,12 +466,43 @@
       }
     }
 
+    if (homeInput) {
+      homeInput.addEventListener('change', async () => {
+        const slug = matchCategorySlug(homeInput.value);
+        if (!slider) return;
+        slider.innerHTML = '';
+        const cakes = await loadFeatured(slug);
+        (cakes || []).slice(0, 10).forEach(c => {
+          const el = cakeCard(c);
+          el.style.minWidth = '260px';
+          el.style.scrollSnapAlign = 'start';
+          slider.appendChild(el);
+        });
+        wireCakeActionDelegation(slider);
+      });
+    }
+
+    if (homeClear) {
+      homeClear.addEventListener('click', async () => {
+        if (homeInput) homeInput.value = '';
+        if (!slider) return;
+        slider.innerHTML = '';
+        const cakes = await loadFeatured('all');
+        (cakes || []).slice(0, 10).forEach(c => {
+          const el = cakeCard(c);
+          el.style.minWidth = '260px';
+          el.style.scrollSnapAlign = 'start';
+          slider.appendChild(el);
+        });
+        wireCakeActionDelegation(slider);
+      });
+    }
+
     // Categories preview
     const catsRoot = $('#homeCategories');
     if (catsRoot) {
-      const cats = await loadCategories();
       catsRoot.innerHTML = '';
-      const top = cats.slice(0, 6);
+      const top = homeCats.slice(0, 6);
       if (!top.length) {
         catsRoot.innerHTML = `
           <div class="chip-tile" style="grid-column:1/-1">
@@ -425,6 +541,13 @@
     const chips = $('#categoryChips');
     const grid = $('#catalogGrid');
     const empty = $('#catalogEmpty');
+    const catInput = $('#catalogCategoryInput');
+    const catList = $('#catalogCategoryList');
+    const clearBtn = $('#catalogClearFilter');
+    const pagination = $('#catalogPagination');
+    const prevBtn = $('#catalogPrev');
+    const nextBtn = $('#catalogNext');
+    const pageInfo = $('#catalogPageInfo');
     if (!grid) return;
 
     wireCakeActionDelegation(grid);
@@ -442,17 +565,35 @@
       const items = Array.isArray(cakes) ? cakes : [];
       if (!items.length) {
         if (empty) empty.hidden = false;
+        if (pagination) pagination.hidden = true;
         return;
       }
       if (empty) empty.hidden = true;
       items.forEach(c => grid.appendChild(cakeCard(c)));
     };
 
-    const loadCakes = async (categorySlug) => {
-      const query = categorySlug && categorySlug !== 'all' ? `?category=${encodeURIComponent(categorySlug)}` : '';
-      const cakes = await jsonFetch(`/api/cakes${query}`);
-      renderCakes(cakes);
+    const updatePagination = (page, totalPages, limit) => {
+      if (!pagination || !pageInfo || !prevBtn || !nextBtn) return;
+      pagination.hidden = totalPages <= 1;
+      const perPage = Number(limit || 12);
+      pageInfo.textContent = `Page ${page} of ${totalPages} • ${perPage} per page`;
+      prevBtn.disabled = page <= 1;
+      nextBtn.disabled = page >= totalPages;
     };
+
+    const loadCakes = async (categorySlug, page) => {
+      const query = new URLSearchParams();
+      if (categorySlug && categorySlug !== 'all') query.set('category', categorySlug);
+      query.set('page', String(page));
+      query.set('limit', '12');
+      const out = normalizePaged(await jsonFetch(`/api/cakes?${query.toString()}`));
+      renderCakes(out.items || []);
+      updatePagination(out.page || 1, out.totalPages || 1, out.limit || 12);
+      return out;
+    };
+
+    let currentPage = 1;
+    let currentCategory = initialCategory || 'all';
 
     if (chips) {
       const cats = await loadCategories();
@@ -472,16 +613,74 @@
         if (!chip) return;
         const slug = chip.dataset.category;
         setActiveChip(slug);
-        await loadCakes(slug);
+        currentCategory = slug || 'all';
+        currentPage = 1;
+        if (catInput) {
+          const cat = state.categories.find(c => c.slug === slug);
+          catInput.value = slug === 'all' ? '' : (cat?.name || slug || '');
+        }
+        await loadCakes(currentCategory, currentPage);
+      });
+    }
+
+    if (catList) {
+      catList.innerHTML = '';
+      const optAll = document.createElement('option');
+      optAll.value = 'All';
+      catList.appendChild(optAll);
+      state.categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.name;
+        catList.appendChild(opt);
+      });
+    }
+
+    if (catInput) {
+      catInput.addEventListener('change', async () => {
+        const slug = matchCategorySlug(catInput.value);
+        setActiveChip(slug);
+        currentCategory = slug || 'all';
+        currentPage = 1;
+        await loadCakes(currentCategory, currentPage);
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', async () => {
+        if (catInput) catInput.value = '';
+        setActiveChip('all');
+        currentCategory = 'all';
+        currentPage = 1;
+        await loadCakes(currentCategory, currentPage);
+      });
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', async () => {
+        if (currentPage <= 1) return;
+        currentPage -= 1;
+        await loadCakes(currentCategory, currentPage);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', async () => {
+        currentPage += 1;
+        await loadCakes(currentCategory, currentPage);
       });
     }
 
     if (initialCategory) {
       setActiveChip(initialCategory);
-      await loadCakes(initialCategory);
+      currentCategory = initialCategory;
+      if (catInput) {
+        const cat = state.categories.find(c => c.slug === initialCategory);
+        catInput.value = cat?.name || initialCategory;
+      }
+      await loadCakes(currentCategory, currentPage);
     } else {
       setActiveChip('all');
-      await loadCakes('all');
+      await loadCakes('all', currentPage);
     }
   };
 
@@ -707,19 +906,48 @@
       setTimeout(() => { el.hidden = true; }, 1600);
     };
 
+    const fetchAllCakes = async () => {
+      const items = [];
+      let page = 1;
+      let totalPages = 1;
+      do {
+        const out = normalizePaged(await authedFetch(`/api/cakes?limit=100&page=${page}`));
+        items.push(...(out.items || []));
+        totalPages = Number(out.totalPages || 1);
+        page += 1;
+      } while (page <= totalPages);
+      return items;
+    };
+
+    const filterState = { search: '', categoryId: '' };
+
+    const applyCakeFilters = () => {
+      const search = filterState.search.trim().toLowerCase();
+      const categoryId = filterState.categoryId;
+      let list = [...state.adminCakes];
+      if (categoryId) {
+        list = list.filter(c => String(c.category?._id || c.category || '') === categoryId);
+      }
+      if (search) {
+        list = list.filter(c => String(c.name || '').toLowerCase().includes(search));
+      }
+      renderCakes(list);
+    };
+
     const refreshAll = async () => {
       const [cats, cakes, info] = await Promise.all([
         authedFetch('/api/categories'),
-        authedFetch('/api/cakes?limit=200'),
+        fetchAllCakes(),
         authedFetch('/api/shop-info'),
       ]);
       state.categories = Array.isArray(cats) ? cats : [];
       state.shopInfo = info;
+      state.adminCakes = Array.isArray(cakes) ? cakes : [];
       renderCategories();
-      renderCakes(cakes);
       renderShopInfo(info);
-      renderAnalytics(cakes);
+      renderAnalytics(state.adminCakes);
       fillCategorySelects();
+      applyCakeFilters();
     };
 
     const catList = $('#catList');
@@ -729,7 +957,10 @@
       const selects = $$('.categorySelect');
       selects.forEach(sel => {
         const current = sel.value;
-        sel.innerHTML = '<option value="">Select category</option>';
+        const wantsAll = sel.dataset.allOption === '1' || sel.id === 'adminCakeCategory';
+        sel.innerHTML = wantsAll
+          ? '<option value="">All categories</option>'
+          : '<option value="">Select category</option>';
         state.categories.forEach(cat => {
           const opt = document.createElement('option');
           opt.value = cat._id;
@@ -910,10 +1141,11 @@
     const cakeCreateForm = $('#cakeCreateForm');
     let pendingUpload = [];
 
-    const uploadImages = async (files) => {
+    const uploadImages = async (files, categoryId) => {
       const fd = new FormData();
       Array.from(files).forEach(f => fd.append('images', f));
-        const res = await fetch(`${API_BASE_URL}/api/upload`, {
+      if (categoryId) fd.append('categoryId', categoryId);
+      const res = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: fd,
@@ -937,7 +1169,8 @@
           uploadBtn.disabled = true;
           uploadBtn.textContent = 'Uploading…';
           try {
-            pendingUpload = await uploadImages(filesInput.files);
+            const categoryId = String($('#createCakeCategory')?.value || '').trim();
+            pendingUpload = await uploadImages(filesInput.files, categoryId);
             if (uploadedLabel) uploadedLabel.textContent = `${pendingUpload.length} image(s) uploaded`;
             toast('Images uploaded');
           } catch (err) {
@@ -974,6 +1207,190 @@
 
         toast('Cake created');
         await refreshAll();
+      });
+    }
+
+    const adminSearch = $('#adminCakeSearch');
+    const adminCategory = $('#adminCakeCategory');
+    if (adminSearch) {
+      adminSearch.addEventListener('input', () => {
+        filterState.search = String(adminSearch.value || '');
+        applyCakeFilters();
+      });
+    }
+    if (adminCategory) {
+      adminCategory.addEventListener('change', () => {
+        filterState.categoryId = String(adminCategory.value || '');
+        applyCakeFilters();
+      });
+    }
+
+    const bulkForm = $('#bulkUploadForm');
+    if (bulkForm) {
+      const bulkCategory = $('#bulkCategory');
+      const bulkFiles = $('#bulkFiles');
+      const bulkHint = $('#bulkFilesHint');
+      const bulkBtn = $('#bulkUploadBtn');
+      const bulkProgress = $('#bulkProgress');
+      const bulkStatus = $('#bulkStatus');
+      const bulkCounts = $('#bulkCounts');
+      const bulkPercent = $('#bulkPercent');
+      const bulkFailed = $('#bulkFailed');
+      const bulkUploaded = $('#bulkUploaded');
+      const bulkBarFill = $('#bulkBarFill');
+      const bulkResults = $('#bulkResults');
+      const bulkGrid = $('#bulkGrid');
+      const bulkSummary = $('#bulkSummary');
+
+      const updateBulkUI = (state) => {
+        if (bulkCounts) {
+          bulkCounts.textContent = `Uploading ${state.uploaded} / ${state.total} images...`;
+        }
+        if (bulkPercent) bulkPercent.textContent = `${Math.round(state.percent)}%`;
+        if (bulkFailed) bulkFailed.textContent = `Failed: ${state.failed}`;
+        if (bulkUploaded) bulkUploaded.textContent = `Uploaded: ${state.uploaded}`;
+        if (bulkBarFill) bulkBarFill.style.width = `${Math.max(0, Math.min(100, state.percent))}%`;
+        const bar = bulkBarFill?.parentElement;
+        if (bar) bar.setAttribute('aria-valuenow', String(Math.round(state.percent)));
+      };
+
+      const bulkCard = (cake) => {
+        const img = getCakePrimaryImageUrl(cake);
+        const el = document.createElement('div');
+        el.className = 'card bulk-card';
+        el.innerHTML = `
+          <div class="card-media">
+            ${img ? `<img src="${escapeAttr(img)}" alt="${escapeAttr(cake.name || 'Cake')}" loading="lazy" />` : ''}
+          </div>
+          <div class="card-body">
+            <div class="card-title">${escapeHtml(cake.name || 'Cake')}</div>
+            <div class="card-meta">
+              <span class="pill">${escapeHtml(cake.categoryName || 'Category')}</span>
+            </div>
+            <div class="count-row">
+              <span><i class="fa-solid fa-heart" style="color:#e91e63"></i> ${cake.likes ?? 0}</span>
+              <span><i class="fa-solid fa-thumbs-down" style="color:#7c4dff"></i> ${cake.dislikes ?? 0}</span>
+            </div>
+            <div class="action-row">
+              <span class="action like" aria-hidden="true"><i class="fa-regular fa-heart"></i></span>
+              <span class="action dislike" aria-hidden="true"><i class="fa-regular fa-thumbs-down"></i></span>
+              ${img ? `<a class="action download" href="${escapeAttr(img)}" download target="_blank" rel="noreferrer" aria-label="Download"><i class="fa-solid fa-download"></i></a>` : '<span class="action download" aria-hidden="true"></span>'}
+              <span class="action" aria-hidden="true"><i class="fa-solid fa-cake-candles"></i></span>
+            </div>
+          </div>
+        `;
+        return el;
+      };
+
+      const uploadBulkBatch = (files, categoryId, onProgress) => new Promise((resolve, reject) => {
+        const fd = new FormData();
+        if (categoryId) fd.append('categoryId', categoryId);
+        files.forEach((file) => fd.append('images', file));
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${API_BASE_URL}/api/cakes/bulk`);
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+        xhr.upload.onprogress = (e) => {
+          if (!e.lengthComputable || !onProgress) return;
+          onProgress((e.loaded / e.total) * 100);
+        };
+
+        xhr.onload = () => {
+          let out = null;
+          try {
+            out = JSON.parse(xhr.responseText || '{}');
+          } catch {
+            return reject(new Error('Upload failed'));
+          }
+          if (xhr.status >= 200 && xhr.status < 300) return resolve(out);
+          return reject(new Error(out.message || 'Upload failed'));
+        };
+
+        xhr.onerror = () => reject(new Error('Upload failed'));
+        xhr.send(fd);
+      });
+
+      if (bulkFiles && bulkHint) {
+        bulkFiles.addEventListener('change', () => {
+          const count = bulkFiles.files ? bulkFiles.files.length : 0;
+          bulkHint.textContent = count ? `${count} image(s) selected` : 'No files selected';
+        });
+      }
+
+      bulkForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const categoryId = String(bulkCategory?.value || '').trim();
+        const files = bulkFiles?.files ? Array.from(bulkFiles.files) : [];
+        if (!categoryId) {
+          toast('Select a category');
+          return;
+        }
+        if (!files.length) {
+          toast('Pick images first');
+          return;
+        }
+        if (files.length > 30) {
+          toast('Select up to 30 images');
+          return;
+        }
+
+        if (bulkBtn) bulkBtn.disabled = true;
+        if (bulkProgress) bulkProgress.hidden = false;
+        if (bulkResults) bulkResults.hidden = true;
+        if (bulkGrid) bulkGrid.innerHTML = '';
+        if (bulkSummary) bulkSummary.textContent = 'Uploading...';
+
+        const stats = { total: files.length, uploaded: 0, failed: 0, percent: 0 };
+        updateBulkUI(stats);
+
+        try {
+          if (bulkStatus) bulkStatus.textContent = 'Optimizing images…';
+          const optimized = [];
+          for (let i = 0; i < files.length; i += 1) {
+            if (bulkStatus) bulkStatus.textContent = `Optimizing ${i + 1} / ${files.length} images…`;
+            // Keep memory steady: process sequentially
+            // eslint-disable-next-line no-await-in-loop
+            const out = await compressImageFile(files[i], { maxSize: 1600, quality: 0.8 });
+            optimized.push(out);
+          }
+
+          const batchSize = 6;
+          const created = [];
+          for (let i = 0; i < optimized.length; i += batchSize) {
+            const batch = optimized.slice(i, i + batchSize);
+            const basePercent = (stats.uploaded / stats.total) * 100;
+            const batchWeight = (batch.length / stats.total) * 100;
+            if (bulkStatus) bulkStatus.textContent = 'Uploading...';
+
+            // eslint-disable-next-line no-await-in-loop
+            const result = await uploadBulkBatch(batch, categoryId, (pct) => {
+              stats.percent = basePercent + (pct / 100) * batchWeight;
+              updateBulkUI(stats);
+            });
+
+            const newCreated = Array.isArray(result.created) ? result.created : [];
+            const newFailed = Array.isArray(result.failed) ? result.failed.length : 0;
+            created.push(...newCreated);
+            stats.uploaded += newCreated.length;
+            stats.failed += newFailed;
+            stats.percent = (stats.uploaded / stats.total) * 100;
+            updateBulkUI(stats);
+          }
+
+          if (bulkStatus) bulkStatus.textContent = 'Upload complete';
+          if (bulkCounts) bulkCounts.textContent = `Uploaded ${stats.uploaded} / ${stats.total} images.`;
+          if (bulkSummary) bulkSummary.textContent = `Created ${created.length} cakes, ${stats.failed} failed.`;
+          if (bulkResults) bulkResults.hidden = false;
+          if (bulkGrid) created.forEach(cake => bulkGrid.appendChild(bulkCard(cake)));
+          toast('Bulk upload complete');
+          await refreshAll();
+        } catch (err) {
+          if (bulkStatus) bulkStatus.textContent = 'Upload failed';
+          toast(err.message || 'Bulk upload failed');
+        } finally {
+          if (bulkBtn) bulkBtn.disabled = false;
+        }
       });
     }
 
@@ -1075,7 +1492,8 @@
           cakeUpload.disabled = true;
           cakeUpload.textContent = 'Uploading…';
           try {
-            const uploaded = await uploadImages(input.files);
+            const categoryId = String(panel.querySelector('[data-cake-cat]')?.value || '').trim();
+            const uploaded = await uploadImages(input.files, categoryId);
             // Save uploaded images into cake
             await authedFetch(`/api/cakes/${encodeURIComponent(cakeId)}`, {
               method: 'PATCH',

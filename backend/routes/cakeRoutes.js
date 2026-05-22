@@ -11,6 +11,7 @@ const {
   likeCake,
   dislikeCake,
   uploadImages,
+  bulkUploadCakes,
   deleteImage,
 } = require('../controllers/cakeController');
 
@@ -20,7 +21,15 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: 8 * 1024 * 1024,
-    files: 12,
+    files: 30,
+  },
+});
+
+const bulkUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 8 * 1024 * 1024,
+    files: 30,
   },
 });
 
@@ -32,7 +41,10 @@ router.patch('/cakes/:id', authMiddleware, updateCake);
 router.delete('/cakes/:id', authMiddleware, deleteCake);
 
 // /api/upload
-router.post('/upload', authMiddleware, upload.array('images', 12), uploadImages);
+router.post('/upload', authMiddleware, upload.array('images', 30), uploadImages);
+
+// /api/cakes/bulk
+router.post('/cakes/bulk', authMiddleware, bulkUpload.array('images', 30), bulkUploadCakes);
 
 // /api/delete
 router.post('/delete', authMiddleware, deleteImage);

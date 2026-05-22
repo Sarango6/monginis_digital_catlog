@@ -127,11 +127,76 @@
       </div>
     </section>
 
+    <section class="section" aria-label="Bulk upload cakes">
+      <div class="panel">
+        <div class="section-head">
+          <h2 class="h2"><i class="fa-solid fa-cloud-arrow-up icon-pink"></i> Bulk Upload Cakes</h2>
+          <div class="muted">Upload 20–30 cakes at once with auto naming and category folders.</div>
+        </div>
+
+        <form class="form" id="bulkUploadForm">
+          <div class="grid two">
+            <div class="field">
+              <label for="bulkCategory">Category</label>
+              <select class="input categorySelect" id="bulkCategory" required>
+                <option value="">Select category</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="bulkFiles">Upload images (20–30)</label>
+              <input class="input" id="bulkFiles" type="file" accept="image/*" multiple />
+              <div class="muted tiny" id="bulkFilesHint">No files selected</div>
+            </div>
+          </div>
+
+          <div class="bulk-progress" id="bulkProgress" hidden>
+            <div class="bulk-progress-head">
+              <div class="bulk-spinner" aria-hidden="true"></div>
+              <div>
+                <div class="bulk-status" id="bulkStatus">Preparing upload…</div>
+                <div class="bulk-counts" id="bulkCounts">Uploading 0 / 0 images…</div>
+              </div>
+            </div>
+            <div class="bulk-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <span id="bulkBarFill"></span>
+            </div>
+            <div class="bulk-metrics">
+              <span id="bulkPercent">0%</span>
+              <span id="bulkFailed">Failed: 0</span>
+              <span id="bulkUploaded">Uploaded: 0</span>
+            </div>
+          </div>
+
+          <button class="btn primary" id="bulkUploadBtn" type="submit"><i class="fa-solid fa-cloud-arrow-up"></i> Start bulk upload</button>
+        </form>
+
+        <div class="bulk-results" id="bulkResults" hidden>
+          <div class="section-head">
+            <h3 class="h2">Uploaded Cakes</h3>
+            <div class="muted" id="bulkSummary">Ready</div>
+          </div>
+          <div class="cake-grid" id="bulkGrid"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="section" aria-label="Manage cakes">
       <div class="panel">
         <div class="section-head">
           <h2 class="h2"><i class="fa-solid fa-gear icon-pink"></i> Manage Cakes</h2>
           <div class="muted">Edit details, add/delete images, delete cakes.</div>
+        </div>
+        <div class="filter-bar">
+          <div class="field">
+            <label for="adminCakeSearch">Search cakes</label>
+            <input class="input" id="adminCakeSearch" placeholder="Search by cake name" />
+          </div>
+          <div class="field">
+            <label for="adminCakeCategory">Filter category</label>
+            <select class="input categorySelect" id="adminCakeCategory" data-all-option="1">
+              <option value="">All categories</option>
+            </select>
+          </div>
         </div>
         <div class="table" id="cakeList"></div>
       </div>

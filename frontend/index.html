@@ -87,6 +87,17 @@
         <h2 class="h2">Latest Cakes</h2>
         <p class="muted">Freshly added cakes, newest first.</p>
       </div>
+      <div class="filter-bar compact">
+        <div class="field">
+          <label for="homeCategoryInput">Category</label>
+          <input class="input" id="homeCategoryInput" list="homeCategoryList" placeholder="Search or select" />
+          <datalist id="homeCategoryList"></datalist>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="btn ghost" id="homeClearFilter" type="button"><i class="fa-solid fa-rotate"></i> Reset</button>
+        </div>
+      </div>
       <div class="slider" id="featuredSlider" aria-live="polite">
         <div class="skeleton-row" id="featuredSkeleton">
           <div class="skeleton card"></div>

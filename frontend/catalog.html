@@ -57,6 +57,17 @@
     </section>
 
     <section class="section" aria-label="Category filter">
+      <div class="filter-bar compact">
+        <div class="field">
+          <label for="catalogCategoryInput">Category</label>
+          <input class="input" id="catalogCategoryInput" list="catalogCategoryList" placeholder="Search or select" />
+          <datalist id="catalogCategoryList"></datalist>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <button class="btn ghost" id="catalogClearFilter" type="button"><i class="fa-solid fa-rotate"></i> Reset</button>
+        </div>
+      </div>
       <div class="chip-row" id="categoryChips">
         <button class="chip active" type="button" data-category="all">All</button>
       </div>
@@ -64,6 +75,11 @@
 
     <section class="section" aria-label="Cake gallery">
       <div class="cake-grid" id="catalogGrid"></div>
+      <div class="pagination" id="catalogPagination" hidden>
+        <button class="btn ghost" id="catalogPrev" type="button"><i class="fa-solid fa-arrow-left"></i> Prev</button>
+        <div class="pagination-info" id="catalogPageInfo">Page 1</div>
+        <button class="btn ghost" id="catalogNext" type="button">Next <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
       <div class="empty" id="catalogEmpty" hidden>
         <h2 class="h2">No cakes yet</h2>
         <p class="muted">The owner will add items soon. Check back shortly.</p>

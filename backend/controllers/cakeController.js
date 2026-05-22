@@ -40,6 +40,8 @@ const listCakes = async (req, res) => {
   const categoryQuery = String(req.query.category || '').trim();
   const sort = String(req.query.sort || '').trim();
   const limit = Math.min(Number(req.query.limit) || 60, 200);
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const paginate = req.query.page != null || String(req.query.paginate || '') === '1';
 
   const filter = {};
   if (categoryQuery && categoryQuery.toLowerCase() !== 'all') {
@@ -54,12 +56,45 @@ const listCakes = async (req, res) => {
   const sortBy = { createdAt: -1 };
   if (sort === 'mostLoved') sortBy.likes = -1;
 
+  if (paginate) {
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      Cake.find(filter).sort(sortBy).skip(skip).limit(limit),
+      Cake.countDocuments(filter),
+    ]);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    return res.json({ items, page, limit, total, totalPages });
+  }
+
   const cakes = await Cake.find(filter)
     .sort(sortBy)
     .limit(limit);
 
-  res.json(cakes);
+  return res.json(cakes);
 };
+
+const uploadToCloudinary = (file, folder) => new Promise((resolve, reject) => {
+  const stream = cloudinary.uploader.upload_stream(
+    {
+      folder,
+      resource_type: 'image',
+      transformation: [
+        { width: 1600, height: 1600, crop: 'limit', quality: 'auto', fetch_format: 'auto' },
+      ],
+    },
+    (err, result) => {
+      if (err) return reject(err);
+      return resolve({
+        url: result.secure_url,
+        publicId: result.public_id,
+        width: result.width,
+        height: result.height,
+        format: result.format,
+      });
+    }
+  );
+  stream.end(file.buffer);
+});
 
 const getCake = async (req, res) => {
   const cake = await Cake.findById(req.params.id);
@@ -187,35 +222,65 @@ const uploadImages = async (req, res) => {
     return res.status(500).json({ message: 'Cloudinary not configured' });
   }
 
-  const folder = process.env.CLOUDINARY_FOLDER || 'monginis/cakes';
+  let folder = process.env.CLOUDINARY_FOLDER || 'monginis/cakes';
+  const categoryId = String(req.body?.categoryId || '').trim();
+  const categorySlug = String(req.body?.categorySlug || '').trim();
+  if (categorySlug) {
+    folder = `cakes/${slugify(categorySlug, { lower: true, strict: true })}`;
+  } else if (categoryId) {
+    const cat = await Category.findById(categoryId);
+    if (cat?.slug) folder = `cakes/${cat.slug}`;
+  }
 
-  const uploads = files.map((file) => {
-    return new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder,
-          resource_type: 'image',
-          transformation: [
-            { quality: 'auto', fetch_format: 'auto' },
-          ],
-        },
-        (err, result) => {
-          if (err) return reject(err);
-          return resolve({
-            url: result.secure_url,
-            publicId: result.public_id,
-            width: result.width,
-            height: result.height,
-            format: result.format,
-          });
-        }
-      );
-      stream.end(file.buffer);
-    });
-  });
-
-  const images = await Promise.all(uploads);
+  const images = await Promise.all(files.map((file) => uploadToCloudinary(file, folder)));
   res.status(201).json({ images });
+};
+
+const bulkUploadCakes = async (req, res) => {
+  const files = req.files || [];
+  const categoryId = String(req.body?.categoryId || '').trim();
+  if (!categoryId) return res.status(400).json({ message: 'Category required' });
+  if (!files.length) return res.status(400).json({ message: 'No images uploaded' });
+
+  if (!process.env.CLOUDINARY_CLOUD_NAME) {
+    return res.status(500).json({ message: 'Cloudinary not configured' });
+  }
+
+  const cat = await Category.findById(categoryId);
+  if (!cat) return res.status(400).json({ message: 'Invalid category' });
+
+  const folder = `cakes/${cat.slug}`;
+  const startIndex = await Cake.countDocuments({ category: cat._id });
+
+  const created = [];
+  const failed = [];
+
+  for (let i = 0; i < files.length; i += 1) {
+    const file = files[i];
+    try {
+      const image = await uploadToCloudinary(file, folder);
+      const displayIndex = startIndex + created.length + 1;
+      const name = `${cat.name} Cake ${displayIndex}`;
+      const base = slugify(name, { lower: true, strict: true });
+      const slug = await uniqueSlug(base || 'cake');
+
+      const cake = await Cake.create({
+        name,
+        slug,
+        description: '',
+        category: cat._id,
+        categoryName: cat.name,
+        categorySlug: cat.slug,
+        imageUrl: image.url,
+        images: [image],
+      });
+      created.push(cake);
+    } catch (err) {
+      failed.push({ name: file.originalname || 'image', message: err.message || 'Upload failed' });
+    }
+  }
+
+  return res.status(201).json({ created, failed, counts: { created: created.length, failed: failed.length } });
 };
 
 const deleteImage = async (req, res) => {
@@ -246,5 +311,6 @@ module.exports = {
   likeCake,
   dislikeCake,
   uploadImages,
+  bulkUploadCakes,
   deleteImage,
 };
